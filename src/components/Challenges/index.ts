@@ -1,11 +1,4 @@
-import { SQLInjectionChallenge } from './SQLInjectionChallenge';
-import { SSHBruteForceChallenge } from './SSHBruteForceChallenge';
-import { SteganographyChallenge } from './SteganographyChallenge';
-import { PrivEscChallenge } from './PrivEscChallenge';
-
-export {
-  SQLInjectionChallenge,
-  SSHBruteForceChallenge,
-  SteganographyChallenge,
-  PrivEscChallenge
-}; 
+export { SQLInjectionChallenge } from './SQLInjectionChallenge';
+export { SSHBruteForceChallenge } from './SSHBruteForceChallenge';
+export { SteganographyChallenge } from './SteganographyChallenge';
+export { PrivEscChallenge } from './PrivEscChallenge'; 
