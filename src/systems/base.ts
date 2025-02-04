@@ -1,17 +1,19 @@
 import { CommandSystem, baseCommands } from './commands';
 
+export interface FileSystem {
+  [key: string]: string;
+}
+
 export interface System {
   commands: CommandSystem;
-  files: {
-    [path: string]: string;
-  };
+  files: FileSystem;
   env: {
     [key: string]: string;
   };
 }
 
 export const createSystem = (
-  files: { [key: string]: string } = {},
+  files: FileSystem = {},
   additionalCommands: CommandSystem = {},
   env: { [key: string]: string } = {}
 ): System => {
