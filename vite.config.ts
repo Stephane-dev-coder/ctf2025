@@ -9,12 +9,18 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+    extensions: ['.js', '.jsx', '.ts', '.tsx']
   },
   optimizeDeps: {
     include: ['firebase/app', 'firebase/auth', 'firebase/firestore']
   },
   build: {
     outDir: 'dist',
-    sourcemap: true
+    sourcemap: true,
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html')
+      }
+    }
   }
 });
