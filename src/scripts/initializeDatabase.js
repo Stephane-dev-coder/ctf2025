@@ -9,7 +9,7 @@ const challenges = {
     description: 'Les Veilleurs cachent leur système de communication...',
     hint: 'La faille des aveux... un simple caractère suffit...',
     points: 100,
-    flag: 'SQL_1nj3ct10n_C4p1t0l3',
+    flag: 'CTF{SQL_1nj3ct10n_C4p1t0l3}',
     requirements: [],
     hintCost: 20
   },
