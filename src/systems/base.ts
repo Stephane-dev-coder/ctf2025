@@ -1,9 +1,10 @@
 import { CommandSystem, baseCommands } from './commands';
-import { VirtualFileSystem, createVirtualFileSystem } from './filesystem';
 
 export interface System {
   commands: CommandSystem;
-  files: VirtualFileSystem;
+  files: {
+    [path: string]: string;
+  };
   env: {
     [key: string]: string;
   };
@@ -14,26 +15,16 @@ export const createSystem = (
   additionalCommands: CommandSystem = {},
   env: { [key: string]: string } = {}
 ): System => {
-  const vfs = createVirtualFileSystem(files);
-  
   const commands: CommandSystem = {
     ...baseCommands,
-    ls: (path = '.') => {
-      const files = Object.keys(vfs).filter(f => !f.includes('/') || f.startsWith(path));
-      return files.join('\n');
-    },
-    cat: (filename: string) => {
-      if (vfs[filename]) {
-        return vfs[filename].content;
-      }
-      return 'File not found';
-    },
+    ls: () => Object.keys(files).join('\n'),
+    cat: (filename: string) => files[filename] || 'File not found',
     ...additionalCommands
   };
 
   return {
     commands,
-    files: vfs,
+    files,
     env: {
       USER: 'user',
       HOME: '/home/user',
