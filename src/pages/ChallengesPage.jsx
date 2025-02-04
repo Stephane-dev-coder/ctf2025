@@ -7,6 +7,10 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '../config/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Challenge } from '../components/Challenge';
+import { useAuth } from '../contexts/AuthContext';
+import { doc, runTransaction, arrayUnion } from 'firebase/firestore';
+import { toast } from 'react-hot-toast';
 
 const scanLine = keyframes`
   0% {
@@ -195,172 +199,77 @@ const Debug = styled.pre`
   z-index: 9999;
 `;
 
-export const ChallengesPage = () => {
-  const [user] = useAuthState(auth);
-  const [challenges, setChallenges] = useState([]);
-  const [selectedChallenge, setSelectedChallenge] = useState(null);
-  const [flag, setFlag] = useState('');
-  const [message, setMessage] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+export function ChallengesPage() {
+  const { user, userData, currentChallenge } = useAuth();
 
-  useEffect(() => {
-    const fetchChallenges = async () => {
-      try {
-        setLoading(true);
-        console.log('Début du chargement des défis...');
-        
-        const challengesCollection = collection(db, 'challenges');
-        console.log('Collection référencée:', challengesCollection);
-        
-        const challengesSnapshot = await getDocs(challengesCollection);
-        console.log('Snapshot obtenu:', challengesSnapshot);
-        
-        const challengesList = challengesSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        console.log('Liste des défis:', challengesList);
-        
-        setChallenges(challengesList);
-        setLoading(false);
-      } catch (error) {
-        console.error('Erreur détaillée:', error);
-        setError(error.message);
-        setLoading(false);
-      }
-    };
-
-    if (user) {
-      console.log('Utilisateur connecté:', user.uid);
-      fetchChallenges();
-    }
-  }, [user]);
-
-  const showMessage = (text, success) => {
-    setMessage({ text, success });
-    setTimeout(() => setMessage(null), 3000);
-  };
-
-  const handleSubmitFlag = async () => {
-    if (!selectedChallenge || !flag) {
-      console.log('Pas de défi sélectionné ou pas de flag');
-      return;
-    }
-
+  const handleSubmitFlag = async (flag) => {
+    if (!user || !currentChallenge) return;
+    
     try {
-      console.log('Soumission du flag:', {
-        userId: user.uid,
-        challengeId: selectedChallenge.id,
-        flag: flag
-      });
-
-      const result = await FirebaseService.submitFlag(
-        user.uid,
-        selectedChallenge.id,
-        flag
-      );
-
-      console.log('Résultat de la soumission:', result);
-
-      if (result.success) {
-        showMessage('Flag correct ! Défi validé !', true);
-        setFlag('');
-        setSelectedChallenge(null);
-        
-        // Rafraîchir les défis
-        const challengesCollection = collection(db, 'challenges');
-        const challengesSnapshot = await getDocs(challengesCollection);
-        const challengesList = challengesSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setChallenges(challengesList);
+      if (flag === currentChallenge.flag) {
+        const userRef = doc(db, 'users', user.uid);
+        await runTransaction(db, async (transaction) => {
+          const userDoc = await transaction.get(userRef);
+          if (!userDoc.exists()) return;
+          
+          transaction.update(userRef, {
+            points: (userDoc.data().points || 0) + currentChallenge.points,
+            completedChallenges: arrayUnion(currentChallenge.id)
+          });
+        });
+        toast.success('Challenge réussi !');
       } else {
-        showMessage('Flag incorrect. Réessayez !', false);
+        toast.error('Flag incorrect');
       }
     } catch (error) {
-      console.error('Erreur détaillée lors de la soumission:', error);
-      showMessage(`Erreur: ${error.message}`, false);
+      console.error('Erreur lors de la soumission du flag:', error);
+      toast.error('Erreur lors de la soumission du flag');
     }
   };
 
-  return (
-    <Container>
-      <Debug>
-        {JSON.stringify({
-          user: user?.uid,
-          loading,
-          error,
-          challengesCount: challenges.length,
-          selectedChallenge: selectedChallenge?.id,
-          challenges: challenges
-        }, null, 2)}
-      </Debug>
-
-      <Title data-text="Défis">Défis</Title>
-
-      {loading && <div>Chargement des défis...</div>}
-      {error && <div>Erreur: {error}</div>}
-
-      {!loading && !error && (
-        <Grid
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          {challenges.map((challenge, index) => (
-            <motion.div
-              key={challenge.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <ChallengeCard
-                challenge={challenge}
-                onClick={setSelectedChallenge}
-              />
-            </motion.div>
-          ))}
-        </Grid>
-      )}
+  const handleUseHint = async (challengeId) => {
+    if (!user || !userData) return;
+    
+    try {
+      const userRef = doc(db, 'users', user.uid);
       
-      <AnimatePresence>
-        {selectedChallenge && (
-          <FlagSubmission
-            initial={{ y: 100 }}
-            animate={{ y: 0 }}
-            exit={{ y: 100 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          >
-            <Input
-              type="text"
-              placeholder="Entrez le flag..."
-              value={flag}
-              onChange={(e) => setFlag(e.target.value)}
-              autoFocus
-            />
-            <Button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleSubmitFlag}
-            >
-              Soumettre
-            </Button>
-          </FlagSubmission>
-        )}
+      await runTransaction(db, async (transaction) => {
+        const userDoc = await transaction.get(userRef);
+        if (!userDoc.exists()) return;
+        
+        const currentPoints = userDoc.data().points || 0;
+        const pointsToDeduct = challengeId.includes('_chatgpt') ? 100 : 10;
+        
+        transaction.update(userRef, {
+          points: currentPoints - pointsToDeduct,
+          usedHints: arrayUnion(challengeId)
+        });
+      });
 
-        {message && (
-          <Message
-            success={message.success}
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
-          >
-            {message.text}
-          </Message>
-        )}
-      </AnimatePresence>
-    </Container>
+      const hintType = challengeId.includes('_chatgpt') ? 'ChatGPT activé' : 'Indice débloqué';
+      const points = challengeId.includes('_chatgpt') ? 100 : 10;
+      toast.warning(`${hintType} (-${points} points)`);
+    } catch (error) {
+      console.error('Erreur lors de l\'utilisation de l\'indice:', error);
+      toast.error('Erreur lors de l\'utilisation de l\'indice');
+    }
+  };
+
+  if (!currentChallenge) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <p className="text-green-500">Aucun challenge en cours</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <Challenge 
+        challenge={currentChallenge}
+        onSubmit={handleSubmitFlag}
+        onUseHint={handleUseHint}
+      />
+    </div>
   );
-}; 
+} 
