@@ -1,23 +1,16 @@
 import React, { useState } from 'react';
 import { Terminal } from './Terminal';
 import { Flag } from 'lucide-react';
+import type { Challenge as ChallengeType } from '../types/challenge';
 import {
   SQLInjectionChallenge,
   SSHBruteForceChallenge,
   SteganographyChallenge,
   PrivEscChallenge
-} from './challenges';
+} from './challenges/index';
 
 interface ChallengeProps {
-  challenge: {
-    id: string;
-    name: string;
-    type: string;
-    description: string;
-    hint: string;
-    points: number;
-    flag: string;
-  };
+  challenge: ChallengeType;
   onSubmit: (flag: string) => void;
 }
 

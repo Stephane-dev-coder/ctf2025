@@ -2,6 +2,14 @@ import { CommandSystem, baseCommands } from './commands';
 
 export interface FileSystem {
   [key: string]: string;
+  'login.php'?: string;
+  'config.php'?: string;
+  'database.sql'?: string;
+  'secret.jpg'?: string;
+  'README.txt'?: string;
+  'backup.sh'?: string;
+  'note.txt'?: string;
+  'ssh_config'?: string;
 }
 
 export interface System {
@@ -13,7 +21,7 @@ export interface System {
 }
 
 export const createSystem = (
-  files: FileSystem = {},
+  files: Partial<FileSystem> = {},
   additionalCommands: CommandSystem = {},
   env: { [key: string]: string } = {}
 ): System => {
@@ -26,7 +34,7 @@ export const createSystem = (
 
   return {
     commands,
-    files,
+    files: files as FileSystem,
     env: {
       USER: 'user',
       HOME: '/home/user',
