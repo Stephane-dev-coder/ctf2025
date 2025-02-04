@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { Terminal } from '../Terminal';
-import { BaseTerminal } from '../BaseTerminal';
-import { sqlSystem } from '../../systems/challenges';
 
 interface SQLInjectionChallengeProps {
   onFlag: (flag: string) => void;
@@ -11,7 +9,6 @@ export function SQLInjectionChallenge({ onFlag }: SQLInjectionChallengeProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [output, setOutput] = useState<string[]>([]);
-  const [showTerminal, setShowTerminal] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +34,6 @@ Flag: CTF{SQL_1nj3ct10n_C4p1t0l3}
 
   return (
     <div className="space-y-4">
-      {/* Interface de login */}
       <Terminal>
         <div className="space-y-4">
           <div className="text-green-500 font-mono">
@@ -66,26 +62,16 @@ Flag: CTF{SQL_1nj3ct10n_C4p1t0l3}
               />
             </div>
             
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                className="bg-green-500/20 border border-green-500 px-4 py-1 hover:bg-green-500/30"
-              >
-                Login
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowTerminal(!showTerminal)}
-                className="bg-green-500/20 border border-green-500 px-4 py-1 hover:bg-green-500/30"
-              >
-                {showTerminal ? 'Cacher Terminal' : 'Afficher Terminal'}
-              </button>
-            </div>
+            <button
+              type="submit"
+              className="bg-green-500/20 border border-green-500 px-4 py-1 hover:bg-green-500/30"
+            >
+              Login
+            </button>
           </form>
         </div>
       </Terminal>
 
-      {/* Affichage des résultats */}
       {output.length > 0 && (
         <Terminal>
           <div className="font-mono whitespace-pre-wrap">
@@ -94,15 +80,6 @@ Flag: CTF{SQL_1nj3ct10n_C4p1t0l3}
             ))}
           </div>
         </Terminal>
-      )}
-
-      {/* Terminal interactif */}
-      {showTerminal && (
-        <BaseTerminal 
-          system={sqlSystem}
-          onFlag={onFlag}
-          prompt="mysql> "
-        />
       )}
     </div>
   );
