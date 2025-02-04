@@ -1,3 +1,10 @@
+import { FileSystem } from '../../systems/base';
+
+const files: Partial<FileSystem> = {
+  'secret.jpg': 'Une image avec des données cachées',
+  'README.txt': 'Les secrets sont parfois cachés dans les bits les moins significatifs...'
+};
+
 export const carmesChallenge = {
   id: 'carmes',
   name: 'Carmes',
@@ -8,14 +15,11 @@ export const carmesChallenge = {
   flag: 'CTF{ST3G4N0_C4RM3S_2025}',
   
   system: {
-    files: {
-      'secret.jpg': 'Une image avec des données cachées',
-      'README.txt': 'Les secrets sont parfois cachés dans les bits les moins significatifs...'
-    },
+    files,
     
     commands: {
-      'ls': () => Object.keys(carmesChallenge.system.files).join('\n'),
-      'cat': (filename: string) => carmesChallenge.system.files[filename] || 'File not found',
+      'ls': () => Object.keys(files).join('\n'),
+      'cat': (filename: keyof typeof files) => files[filename] || 'File not found',
       'steghide': (args: string[]) => {
         if (args[0] === 'extract' && args[1] === '-sf' && args[2] === 'secret.jpg' && args[3] === '-p' && args[4] === 'carmes2025') {
           return `

@@ -1,25 +1,27 @@
+import { FileSystem } from '../../systems/base';
+
+const files: Partial<FileSystem> = {
+  'ssh_config': `Host veilleurs-server
+  HostName 192.168.1.100
+  User admin
+  Port 22`,
+  'note.txt': 'Le mot de passe est un nombre à 4 chiffres...'
+};
+
 export const saintCyprienChallenge = {
   id: 'saint-cyprien',
   name: 'Saint-Cyprien',
-  type: 'Brute Force SSH',
-  description: 'Les frontières sont floues, les chemins ordinaires cachent des passages...',
-  hint: 'Les nombres basiques protègent ces portes...',
+  type: 'Brute Force',
+  description: 'Un serveur SSH mal configuré...',
+  hint: 'Les mots de passe numériques sont faciles à deviner...',
   points: 150,
   flag: 'CTF{SSH_BRUT3_F0RC3_CYPR13N}',
   
   system: {
-    files: {
-      'ssh_config': `
-Host veilleurs-server
-  HostName 192.168.1.100
-  User admin
-  Port 22`,
-      'note.txt': 'Le mot de passe est un nombre à 4 chiffres...'
-    },
-    
+    files,
     commands: {
-      'ls': () => Object.keys(saintCyprienChallenge.system.files).join('\n'),
-      'cat': (filename: string) => saintCyprienChallenge.system.files[filename] || 'File not found',
+      'ls': () => Object.keys(files).join('\n'),
+      'cat': (filename: keyof typeof files) => files[filename] || 'File not found',
       'ssh': (password: string) => {
         if (password === '1337') {
           return `Welcome admin!

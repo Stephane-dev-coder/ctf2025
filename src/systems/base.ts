@@ -1,15 +1,15 @@
 import { CommandSystem, baseCommands } from './commands';
 
 export interface FileSystem {
-  [key: string]: string;
-  'login.php'?: string;
-  'config.php'?: string;
-  'database.sql'?: string;
-  'secret.jpg'?: string;
-  'README.txt'?: string;
-  'backup.sh'?: string;
-  'note.txt'?: string;
-  'ssh_config'?: string;
+  [key: string]: string | undefined;
+  'login.php': string;
+  'config.php': string;
+  'database.sql': string;
+  'secret.jpg': string;
+  'README.txt': string;
+  'backup.sh': string;
+  'note.txt': string;
+  'ssh_config': string;
 }
 
 export interface System {
@@ -27,8 +27,8 @@ export const createSystem = (
 ): System => {
   const commands: CommandSystem = {
     ...baseCommands,
-    ls: () => Object.keys(files).join('\n'),
-    cat: (filename: string) => files[filename] || 'File not found',
+    ls: () => Object.keys(files).filter(key => files[key] !== undefined).join('\n'),
+    cat: (filename: string) => files[filename] ?? 'File not found',
     ...additionalCommands
   };
 

@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Matrix } from './components/Matrix';
 import { Terminal } from './components/Terminal';
 import { Login } from './components/Login';
-import { Challenge } from './components/Challenge';
+import { Challenge as ChallengeComponent } from './components/Challenge';
 import { Shield, Timer, Map, Trophy } from 'lucide-react';
-import type { Challenge as ChallengeType, User, ScoreEntry } from './types';
+import type { Challenge, User, ScoreEntry } from './types';
 import { auth, db } from './lib/firebase';
 import { doc, setDoc, updateDoc, getDoc } from 'firebase/firestore';
 import { signInAnonymously } from 'firebase/auth';
@@ -12,7 +12,7 @@ import { useAuth } from './hooks/useAuth';
 import { Toast } from './components/Toast';
 import { VictoryScreen } from './components/VictoryScreen';
 
-const CHALLENGES: ChallengeType[] = [
+const CHALLENGES: Challenge[] = [
   {
     id: 'capitole',
     name: 'SQL Injection',
@@ -256,9 +256,9 @@ function App() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2">
             {currentChallenge && (
-              <Challenge
-                challenge={currentChallenge}
-                onSubmit={handleFlagSubmit}
+              <ChallengeComponent 
+                challenge={currentChallenge} 
+                onSubmit={handleFlagSubmit} 
               />
             )}
           </div>

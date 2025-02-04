@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { Terminal } from './Terminal';
 import { Flag } from 'lucide-react';
-import type { Challenge as ChallengeType } from '../types/challenge';
+import type { Challenge } from '../types';
 import {
   SQLInjectionChallenge,
   SSHBruteForceChallenge,
   SteganographyChallenge,
   PrivEscChallenge
-} from './challenges/index';
+} from './challenges';
 
 interface ChallengeProps {
-  challenge: ChallengeType;
+  challenge: Challenge;
   onSubmit: (flag: string) => void;
 }
 
@@ -52,11 +52,11 @@ export function Challenge({ challenge, onSubmit }: ChallengeProps) {
         <div className="space-y-4">
           <h3 className="text-xl font-bold flex items-center gap-2">
             <Flag className="w-5 h-5" />
-            {challenge.name} - {challenge.type}
+            {challenge.name}
           </h3>
 
           <div className="typing-effect">
-            {challenge.description}
+            {challenge.message}
           </div>
 
           {showHint && (
