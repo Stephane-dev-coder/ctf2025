@@ -7,7 +7,7 @@ interface SQLInjectionChallengeProps {
   onFlag: (flag: string) => void;
 }
 
-export const SQLInjectionChallenge = ({ onFlag }: SQLInjectionChallengeProps) => {
+export function SQLInjectionChallenge({ onFlag }: SQLInjectionChallengeProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [output, setOutput] = useState<string[]>([]);
@@ -106,4 +106,4 @@ Flag: CTF{SQL_1nj3ct10n_C4p1t0l3}
       )}
     </div>
   );
-}; 
+} 
