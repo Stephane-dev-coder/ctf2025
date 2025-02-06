@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Terminal } from './Terminal';
 import { Flag } from 'lucide-react';
-import { SQLInjectionChallenge } from './challenges/SQLInjectionChallenge';
-import { SSHBruteForceChallenge } from './challenges/SSHBruteForceChallenge';
-import { SteganographyChallenge } from './challenges/SteganographyChallenge';
-import { PrivEscChallenge } from './challenges/PrivEscChallenge';
+import { SQLInjectionChallenge } from './Challenges/SQLInjectionChallenge';
+import { SSHBruteForceChallenge } from './Challenges/SSHBruteForceChallenge';
+import { SteganographyChallenge } from './Challenges/SteganographyChallenge';
+import { PrivEscChallenge } from './Challenges/PrivEscChallenge';
 
 interface ChallengeProps {
   challenge: {
