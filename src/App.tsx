@@ -11,6 +11,8 @@ import { signInAnonymously } from 'firebase/auth';
 import { useAuth } from './hooks/useAuth';
 import { Toast } from './components/Toast';
 import { VictoryScreen } from './components/VictoryScreen';
+import { LandingPage } from './components/LandingPage';
+import { LeaderboardPage } from './components/LeaderboardPage';
 
 const CHALLENGES: ChallengeType[] = [
   {
@@ -52,6 +54,36 @@ const CHALLENGES: ChallengeType[] = [
     completed: false,
     flag: 'CTF{PR1V_3SC_J34N_J4UR3S}',
     points: 250
+  },
+  {
+    id: 'cote-pave',
+    name: 'WiFi Hacking',
+    district: 'Côté Pavé',
+    message: 'Un réseau WiFi suspect a été détecté dans le quartier...',
+    hint: 'L\'histoire du quartier pourrait être la clé...',
+    completed: false,
+    flag: 'CTF{W1F1_CR4CK3D_C0T3_P4V3_1930}',
+    points: 150
+  },
+  {
+    id: 'mirail',
+    name: 'IoT Hacking',
+    district: 'Mirail',
+    message: 'Des objets connectés vulnérables contrôlent les accès...',
+    hint: 'Le buffer overflow est votre ami...',
+    completed: false,
+    flag: 'CTF{M1R41L_10T_0V3RFL0W_M4ST3R}',
+    points: 200
+  },
+  {
+    id: 'balamats',
+    name: 'RFID Cloning',
+    district: 'Balamats',
+    message: 'Les badges d\'accès cachent des secrets...',
+    hint: 'MIFARE Classic - une technologie avec des faiblesses connues...',
+    completed: false,
+    flag: 'CTF{RF1D_CL0N3_B4L4M4TS_2024}',
+    points: 250
   }
 ];
 
@@ -63,6 +95,8 @@ function App() {
   const [audio] = useState(new Audio('/terminal.mp3'));
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [showVictoryScreen, setShowVictoryScreen] = useState(false);
+  const [showLanding, setShowLanding] = useState(true);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   useEffect(() => {
     if (!userData) return;
@@ -111,18 +145,24 @@ function App() {
       console.log('Tentative de validation du flag...');
 
       if (flag === currentChallenge.flag) {
-        // Mise à jour Firestore
         const userRef = doc(db, 'users', auth.currentUser.uid);
         const newScore = userData.score + currentChallenge.points;
         
-        // Déterminer le prochain district
-        const challengeOrder = ['capitole', 'saint-cyprien', 'carmes', 'jean-jaures'];
+        // Modifier l'ordre des districts pour inclure les nouveaux
+        const challengeOrder = [
+          'capitole', 
+          'saint-cyprien', 
+          'carmes', 
+          'jean-jaures',
+          'cote-pave',
+          'mirail',
+          'balamats'
+        ];
         const currentIndex = challengeOrder.indexOf(currentChallenge.id);
         const nextDistrict = challengeOrder[currentIndex + 1] || currentChallenge.id;
 
         const newCompletedChallenges = [...userData.completedChallenges, currentChallenge.id];
 
-        // Mise à jour Firestore
         await updateDoc(userRef, {
           score: newScore,
           completedChallenges: newCompletedChallenges,
@@ -130,19 +170,6 @@ function App() {
           lastActive: new Date().toISOString()
         });
 
-        // Mise à jour de l'état local de userData
-        const updatedUserData = {
-          ...userData,
-          score: newScore,
-          completedChallenges: newCompletedChallenges,
-          currentDistrict: nextDistrict
-        };
-        
-        // Forcer la mise à jour du hook useAuth
-        const userDoc = await getDoc(userRef);
-        const newUserData = userDoc.data();
-        
-        // Mise à jour des challenges
         setChallenges(current =>
           current.map(c => 
             c.id === currentChallenge.id ? { ...c, completed: true } : c
@@ -154,18 +181,18 @@ function App() {
           type: 'success' 
         });
 
-        // Si ce n'est pas le dernier défi, afficher un message pour le prochain
-        if (currentIndex < challengeOrder.length - 1) {
+        // Modifier la condition de victoire pour inclure tous les challenges
+        if (newCompletedChallenges.length === challengeOrder.length) {
+          setTimeout(() => {
+            setShowVictoryScreen(true);
+          }, 1000);
+        } else if (currentIndex < challengeOrder.length - 1) {
           setTimeout(() => {
             setToast({
               message: `Nouveau district débloqué : ${challenges.find(c => c.id === nextDistrict)?.district}`,
               type: 'success'
             });
           }, 3500);
-        } else {
-          setTimeout(() => {
-            setShowVictoryScreen(true);
-          }, 1000);
         }
       } else {
         setToast({ 
@@ -182,40 +209,20 @@ function App() {
     }
   };
 
-  // Afficher un écran de chargement pendant l'initialisation de Firebase
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-black text-green-500 p-4 flex items-center justify-center">
-        <Terminal>
-          <div className="text-center">
-            <p>Initialisation du système...</p>
-          </div>
-        </Terminal>
-      </div>
-    );
+  if (showLanding) {
+    return <LandingPage onStart={() => setShowLanding(false)} />;
   }
 
-  if (authError) {
-    return (
-      <div className="min-h-screen bg-black text-red-500 p-4 flex items-center justify-center">
-        <Terminal>
-          <div className="text-center">
-            <p>Erreur d'initialisation: {authError.message}</p>
-          </div>
-        </Terminal>
-      </div>
-    );
+  if (showLeaderboard) {
+    return <LeaderboardPage scores={scores} onBack={() => setShowLeaderboard(false)} />;
+  }
+
+  if (authLoading) {
+    return <div>Chargement...</div>;
   }
 
   if (!userData) {
-    return (
-      <div className="min-h-screen bg-black text-green-500 p-4">
-        <Matrix />
-        <div className="max-w-2xl mx-auto pt-20">
-          <Login onLogin={handleLogin} />
-        </div>
-      </div>
-    );
+    return <Login onLogin={handleLogin} />;
   }
 
   const formatTime = (seconds: number) => {
@@ -226,84 +233,105 @@ function App() {
 
   const currentChallenge = challenges.find(c => c.id === userData.currentDistrict);
 
+  const NavBar = () => (
+    <div className="fixed top-0 left-0 right-0 bg-black/80 backdrop-blur-sm border-b border-green-500/30 z-50">
+      <div className="max-w-6xl mx-auto p-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Shield className="w-5 h-5" />
+            <span>{userData?.username || 'Agent'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Timer className="w-5 h-5" />
+            <span className="font-mono">{formatTime(timeLeft)}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Trophy className="w-5 h-5" />
+            <span>{userData?.score || 0} pts</span>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setShowLeaderboard(true)}
+            className="flex items-center gap-2 hover:text-green-400 transition-colors px-4 py-2 rounded-lg bg-green-500/10"
+          >
+            <Trophy className="w-5 h-5" />
+            Classement
+          </button>
+          {userData && (
+            <button
+              onClick={() => auth.signOut()}
+              className="flex items-center gap-2 hover:text-red-400 transition-colors"
+            >
+              Déconnexion
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-black text-green-500 p-4">
+    <div className="min-h-screen bg-black text-green-500">
       <Matrix />
       
-      <div className="max-w-6xl mx-auto space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Terminal>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Shield className="w-5 h-5" />
-                <span>Agent: {userData.username}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Timer className="w-5 h-5" />
-                <span className="font-bold">{formatTime(timeLeft)}</span>
-              </div>
+      <NavBar />
+      
+      <div className="pt-20 p-4">
+        <div className="max-w-6xl mx-auto space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2">
+              {currentChallenge && (
+                <Challenge
+                  challenge={currentChallenge}
+                  onSubmit={handleFlagSubmit}
+                />
+              )}
             </div>
-          </Terminal>
 
-          <Terminal>
-            <div className="flex items-center gap-2">
-              <Trophy className="w-5 h-5" />
-              <span>Score: {userData.score} points</span>
-            </div>
-          </Terminal>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="md:col-span-2">
-            {currentChallenge && (
-              <Challenge
-                challenge={currentChallenge}
-                onSubmit={handleFlagSubmit}
-              />
-            )}
+            <Terminal>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Map className="w-5 h-5" />
+                  <h3 className="font-bold">Progression</h3>
+                </div>
+                <div className="space-y-3">
+                  {challenges.map((challenge, index) => (
+                    <div
+                      key={challenge.id}
+                      className={`
+                        flex items-center gap-3 p-2 rounded
+                        ${challenge.id === userData.currentDistrict ? 'bg-green-500/10' : ''}
+                        ${challenge.completed ? 'text-green-500' : 'text-green-500/50'}
+                        transition-all duration-300
+                      `}
+                    >
+                      <div className="relative">
+                        <span className="w-6 h-6 flex items-center justify-center border-2 border-current rounded-full text-xs">
+                          {challenge.completed ? '✓' : (index + 1)}
+                        </span>
+                        {index < challenges.length - 1 && (
+                          <div className={`
+                            absolute top-full left-1/2 w-0.5 h-3 
+                            ${challenge.completed ? 'bg-green-500' : 'bg-green-500/20'}
+                            -translate-x-1/2
+                          `} />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-bold">{challenge.district}</div>
+                        <div className="text-xs opacity-70">{challenge.name}</div>
+                      </div>
+                      <div className="text-xs">
+                        {challenge.points} pts
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Terminal>
           </div>
-
-          <Terminal>
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Map className="w-5 h-5" />
-                <h3 className="font-bold">Progression</h3>
-              </div>
-              <div className="space-y-3">
-                {challenges.map((challenge, index) => (
-                  <div
-                    key={challenge.id}
-                    className={`
-                      flex items-center gap-3 p-2 rounded
-                      ${challenge.id === userData.currentDistrict ? 'bg-green-500/10' : ''}
-                      ${challenge.completed ? 'text-green-500' : 'text-green-500/50'}
-                      transition-all duration-300
-                    `}
-                  >
-                    <div className="relative">
-                      <span className="w-6 h-6 flex items-center justify-center border-2 border-current rounded-full text-xs">
-                        {challenge.completed ? '✓' : (index + 1)}
-                      </span>
-                      {index < challenges.length - 1 && (
-                        <div className={`
-                          absolute top-full left-1/2 w-0.5 h-3 
-                          ${challenge.completed ? 'bg-green-500' : 'bg-green-500/20'}
-                          -translate-x-1/2
-                        `} />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-bold">{challenge.district}</div>
-                      <div className="text-xs opacity-70">{challenge.name}</div>
-                    </div>
-                    <div className="text-xs">
-                      {challenge.points} pts
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Terminal>
         </div>
       </div>
       

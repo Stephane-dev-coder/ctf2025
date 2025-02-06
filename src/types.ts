@@ -19,4 +19,7 @@ export interface User {
 export interface ScoreEntry {
   username: string;
   score: number;
+  completedChallenges: string[];
+  currentDistrict: string;
+  startTime: string;
 }

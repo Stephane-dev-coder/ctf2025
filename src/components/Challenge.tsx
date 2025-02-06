@@ -5,6 +5,9 @@ import { SQLInjectionChallenge } from './Challenges/SQLInjectionChallenge';
 import { SSHBruteForceChallenge } from './Challenges/SSHBruteForceChallenge';
 import { SteganographyChallenge } from './Challenges/SteganographyChallenge';
 import { PrivEscChallenge } from './Challenges/PrivEscChallenge';
+import { WifiHackingChallenge } from './Challenges/WifiHackingChallenge';
+import { IoTHackingChallenge } from './Challenges/IoTHackingChallenge';
+import { RFIDCloningChallenge } from './Challenges/RFIDCloningChallenge';
 
 interface ChallengeProps {
   challenge: {
@@ -46,6 +49,12 @@ export function Challenge({ challenge, onSubmit }: ChallengeProps) {
         return <SteganographyChallenge onFlag={handleFlagFound} />;
       case 'jean-jaures':
         return <PrivEscChallenge onFlag={handleFlagFound} />;
+      case 'cote-pave':
+        return <WifiHackingChallenge onFlag={handleFlagFound} />;
+      case 'mirail':
+        return <IoTHackingChallenge onFlag={handleFlagFound} />;
+      case 'balamats':
+        return <RFIDCloningChallenge onFlag={handleFlagFound} />;
       default:
         return null;
     }
