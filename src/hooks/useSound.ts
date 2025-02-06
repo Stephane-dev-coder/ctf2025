@@ -1,27 +1,28 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
-interface Sounds {
-  error: HTMLAudioElement;
-  success: HTMLAudioElement;
-  typing: HTMLAudioElement;
-  victory: HTMLAudioElement;
-}
+const sounds = {
+  success: '/success.mp3',
+  error: '/error.mp3',
+  victory: '/victory.mp3',
+  typing: '/typing.mp3'
+} as const;
 
 export const useSound = () => {
-  const sounds = useRef<Partial<Sounds>>({});
+  const audioRefs = useRef<{ [K in keyof typeof sounds]?: HTMLAudioElement }>({});
 
-  const loadSound = (name: keyof Sounds, url: string) => {
-    const audio = new Audio(url);
-    sounds.current[name] = audio;
-  };
+  useEffect(() => {
+    Object.entries(sounds).forEach(([key, path]) => {
+      audioRefs.current[key as keyof typeof sounds] = new Audio(path);
+    });
+  }, []);
 
-  const playSound = (name: keyof Sounds) => {
-    const audio = sounds.current[name];
+  const play = (soundName: keyof typeof sounds) => {
+    const audio = audioRefs.current[soundName];
     if (audio) {
       audio.currentTime = 0;
-      audio.play().catch(console.error);
+      audio.play();
     }
   };
 
-  return { loadSound, playSound };
+  return { play };
 }; 

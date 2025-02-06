@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
 import { Terminal } from './Terminal';
 import { Flag } from 'lucide-react';
-import type { Challenge } from '../types';
-import {
-  SQLInjectionChallenge,
-  SSHBruteForceChallenge,
-  SteganographyChallenge,
-  PrivEscChallenge
-} from './Challenges';
+import { SQLInjectionChallenge } from './challenges/SQLInjectionChallenge';
+import { SSHBruteForceChallenge } from './challenges/SSHBruteForceChallenge';
+import { SteganographyChallenge } from './challenges/SteganographyChallenge';
+import { PrivEscChallenge } from './challenges/PrivEscChallenge';
 
 interface ChallengeProps {
-  challenge: Challenge;
+  challenge: {
+    id: string;
+    name: string;
+    type: string;
+    description: string;
+    hint: string;
+    points: number;
+    flag: string;
+  };
   onSubmit: (flag: string) => void;
 }
 
@@ -52,11 +57,11 @@ export function Challenge({ challenge, onSubmit }: ChallengeProps) {
         <div className="space-y-4">
           <h3 className="text-xl font-bold flex items-center gap-2">
             <Flag className="w-5 h-5" />
-            {challenge.name}
+            {challenge.name} - {challenge.type}
           </h3>
 
           <div className="typing-effect">
-            {challenge.message}
+            {challenge.description}
           </div>
 
           {showHint && (
